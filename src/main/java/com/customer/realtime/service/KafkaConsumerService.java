@@ -7,8 +7,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import com.customer.realtime.model.Customer;
-import com.customer.realtime.model.ESCustomer;
-import com.customer.realtime.repository.elastic.CustomerElasticRepository;
 import com.customer.realtime.repository.postgre.CustomerRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -18,9 +16,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class KafkaConsumerService {
     @Autowired
     private CustomerRepository customerRepository;
-
-    @Autowired
-    private CustomerElasticRepository customerElasticRepository;
 
     @Autowired
     private CacheManager cacheManager;
@@ -35,11 +30,6 @@ public class KafkaConsumerService {
 
         customerRepository.saveAll(customers);
 
-        List<ESCustomer> esCustomers = customers.stream()
-                .map(this::convertToESCustomer)
-                .collect(java.util.stream.Collectors.toList());
-        customerElasticRepository.saveAll(esCustomers);
-
         cacheManager.getCache("customers").clear();
     }
 
@@ -49,11 +39,6 @@ public class KafkaConsumerService {
         });
 
         customerRepository.saveAll(customers);
-
-        List<ESCustomer> esCustomers = customers.stream()
-                .map(this::convertToESCustomer)
-                .collect(java.util.stream.Collectors.toList());
-        customerElasticRepository.saveAll(esCustomers);
 
         cacheManager.getCache("customers").clear();
         customers.forEach(customer -> cacheManager.getCache("customer").evict(customer.getCustomerName()));
@@ -65,18 +50,7 @@ public class KafkaConsumerService {
         });
 
         customerRepository.deleteAllById(customerIds);
-        customerElasticRepository.deleteAllById(customerIds);
 
         cacheManager.getCache("customers").clear();
-    }
-
-    private ESCustomer convertToESCustomer(Customer customer) {
-        ESCustomer esCustomer = new ESCustomer();
-        esCustomer.setCustomerId(customer.getCustomerId());
-        esCustomer.setCustomerName(customer.getCustomerName());
-        esCustomer.setCustomerAddress(customer.getCustomerAddress());
-        esCustomer.setCustomerPhoneNumber(customer.getCustomerPhoneNumber());
-        esCustomer.setCustomerGender(customer.getCustomerGender());
-        return esCustomer;
     }
 }

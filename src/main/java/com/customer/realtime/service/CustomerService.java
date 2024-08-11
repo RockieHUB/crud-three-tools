@@ -22,9 +22,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @EnableCaching
+@Slf4j
 public class CustomerService {
     @Autowired
     private CustomerRepository customerRepository;
@@ -48,6 +50,7 @@ public class CustomerService {
 
         customerElasticRepository.deleteAll();
         customerElasticRepository.saveAll(esCustomers);
+        log.info("Proses Sinkronisasi dilakukan");
     }
 
     private ESCustomer convertToESCustomer(Customer customer) {
